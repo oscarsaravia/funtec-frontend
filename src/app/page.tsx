@@ -1,113 +1,175 @@
-import Image from 'next/image'
+"use client";
+import { ReviewCard } from "@/components/review/ReviewCard";
+import { Navbar } from "../components/navbar/Navbar";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import axios from 'axios';
+import { useEffect, useState } from "react";
+import { Formik, Form, Field, FormikHelpers } from 'formik';
+
+type Review = {
+  _id:       string;
+  stars:     string;
+  review:    string;
+  name:      string;
+  role:      string;
+  image:     string;
+  createdAt: Date;
+  updatedAt: Date;
+  __v:       number;
+}
+
+interface Values {
+  name: string;
+  email: string;
+  department: string;
+  time: string;
+}
 
 export default function Home() {
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [])
+
+  const fetchReviews = async() => {
+    const { data, status } = await axios.get<Review[]>(
+      "http://localhost:5001/review/"
+    )
+
+    setReviews(data);
+  }
+
+  const validateForm = (values: Values) => {
+    const errors = {
+      name: "",
+      email: "",
+    };
+    if (values.name === "") {
+      errors.name = "Required";
+    }
+    else if (values.email === "") {
+      errors.email = "Required";
+    }
+    else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
+      errors.email = 'Invalid email address';
+    }
+
+    return errors;
+  }
+
+  const onAppointmentSubmit = async(values: any) => {
+    console.log(values);
+    await axios.post(
+      "http://localhost:5001/appointment/create/",
+      values
+    )
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <>
+      <div className="xl:h-[823px] h-[1350px] w-screen max-w-screen bg-hero-pattern bg-cover bg-no-repeat">
+        <Navbar />
+        <div className="home-content relative left-1/2 -translate-x-1/2 flex flex-col xl:flex-row justify-between items-center max-w-[1050px] mt-[50px]">
+          <div className="left-part text-center xl:text-left max-w-[693px] flex-col items-center  flex xl:block">
+            <h1 className="xl:font-black font-bold leading-[50px] text-[40px] xl:leading-[65px] mb-9 text-primary-blue text-4xl xl:text-6xl max-w-[95vw]">Help to reclaim your life and freedom</h1>
+            <h4 className="mb-9 flex font-medium text-xl leading-[30px] max-w-[95vw] xl:w-[539px] text-gray-text">We know how large objects will act, but things on a small scale.</h4>
+            <div className="buttons flex flex-col gap-[20px] mb-[80px] xl:mb-[0px] xl:block">
+              <button className="bg-[#784F33] w-[182px] text-center leading-[28px] py-3 text-white rounded-[37px] text-[14px] font-bold">Get Quote Now</button>
+              <button className="w-[155px] bg-transparent text-center border-2 border-solid border-[#784F33] text-[#784F33] py-3 rounded-[37px] ml-3">Learn More</button>
+            </div>
+          </div>
+          <div className="right-part">
+            <div className="form-div bg-white h-[619px] w-[330px] rounded py-10 px-12 flex flex-col">
+              <h3 className="text-primary-blue font-bold text-2xl text-center mb-10">Book Appointment</h3>
+              <Formik
+                initialValues={{
+                  name: '',
+                  email: '',
+                  department: '',
+                  time: '',
+                }}
+                onSubmit={(
+                  values: Values,
+                  { setSubmitting }: FormikHelpers<Values>
+                ) => {
+                  onAppointmentSubmit(values);
+                  setSubmitting(false);
+                }}
+                // validate={validateForm}
+              >
+                <Form>
+                  <label htmlFor="nombre" className="font-bold text-sm mb-[10px]">Name*</label>
+                  <Field type="text" name="name" placeholder="Full Name" className="font-montserrat w-[245px] placeholder-[#737373] mb-3 h-[50px] border-[1px] border-[#BDBDBD] bg-[#F9F9F9] py-3 px-5 rounded-[5px]"></Field>
+                  <label htmlFor="email" className="font-bold text-sm mb-[10px]">Email*</label>
+                  <Field type="email" name="email" placeholder="example@gmail.com" className="font-montserrat w-[245px] placeholder-[#737373] mb-3 h-[50px] border-[1px] border-[#BDBDBD] bg-[#F9F9F9] py-3 px-5 rounded-[5px]"></Field>
+                  <label htmlFor="department" className="font-bold text-sm mb-[10px]">Department*</label>
+                  <Field as="select" name="department" className="w-[245px] text-[#737373] mb-3 h-[50px] border-[1px] border-[#BDBDBD] bg-[#F9F9F9] py-3 px-5 rounded-[5px] font-montserrat">
+                  <option value="op1">Option 1</option>
+                  <option value="op2">Option 2</option>
+                  <option value="op3">Option 3</option>
+                  <option value="op4">Option 4</option>
+                  </Field>
+                  <label htmlFor="time" className="font-bold text-sm mb-[10px]">Time*</label>
+                  <Field as="select" name="time" className="w-[245px] text-[#737373] mb-10 h-[50px] border-[1px] border-[#BDBDBD] bg-[#F9F9F9] py-3 px-5 rounded-[5px] font-montserrat">
+                    <option value="op1">4:00 Available</option>
+                    <option value="op2">Option 2</option>
+                    <option value="op3">Option 3</option>
+                    <option value="op4">Option 4</option>
+                  </Field>
+                  <button type="submit" className="leading-[28px] py-[15px] px-[56.5px] w-[248px] rounded-md text-[0.870rem] font-bold bg-[#295C7A] text-white">Book Appointment</button>
+                </Form>
+              </Formik>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      {/* Reseñas */}
+      <div className="h-[591px]">
+        <div className="clients-text relative left-1/2 -translate-x-1/2 justify-center items-center flex flex-col mt-[80px]">
+          <h2 className="font-bold text-[40px] text-primary-blue max-w-[63vw] text-center xl:text-left xl:max-w-[95vw]">What Clients Say</h2>
+          <p className="text-gray-text text-sm font-normal max-w-[90vw]font-open-sans w-[60vw] xl:w-[431px] text-center mt-[10px]">Problems trying to resolve the conflict between the two major realms of Classical physics: Newtonian mechanics</p>
+        </div>
+        <div className="relative ml-[20px] max-h-[1050px] left-1/2 -translate-x-1/2 justify-center items-center flex flex-row mt-[80px] gap-[30px]">
+          {/* <ReviewCard />
+          <ReviewCard />
+          <ReviewCard /> */}
+          <Swiper
+            slidesPerView={3}
+            spaceBetween={30}
+            className="mySwiper"
+            width={1050}
+            breakpoints={{
+              1120: {
+                slidesPerView: 2,
+              },
+              1280: {
+                // width: 576,
+                slidesPerView: 3,
+              },
+            }}
+          >
+            {
+              reviews?.map((review) => {
+                return (
+                  <SwiperSlide key={review._id}>
+                    <ReviewCard 
+                      stars={review.stars}
+                      review={review.review}
+                      name={review.name}
+                      role={review.role}
+                      image={review.image}
+                    />
+                  </SwiperSlide>
+                )
+              })
+            }
+          </Swiper>
+        </div>
       </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </>
   )
 }
